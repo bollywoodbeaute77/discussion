@@ -2,54 +2,672 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#9B193B">
 <title>Discussion</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
-  :root{ --bg:#faf5f2; --card:#fff; --accent:#9B193B; --accent2:#c23a5e; --txt:#2a2024; --muted:#8a7f84; }
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]){ --bg:#1a1114; --card:#241a1e; --txt:#f3e9ec; --muted:#b59aa3; }
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    background:var(--bg); color:var(--txt);
-    min-height:100dvh; display:flex; align-items:center; justify-content:center;
-    padding:24px; text-align:center;
-  }
-  .card{
-    background:var(--card); border-radius:28px; padding:44px 30px;
-    max-width:420px; width:100%;
-    box-shadow:0 20px 60px rgba(155,25,59,.14);
-  }
-  .logo{
-    width:96px;height:96px;border-radius:28px;margin:0 auto 22px;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    display:flex;align-items:center;justify-content:center;
-    font-size:46px; box-shadow:0 10px 28px rgba(155,25,59,.35);
-  }
-  h1{margin:0 0 8px;font-size:26px;letter-spacing:.3px}
-  p{margin:0 0 6px;color:var(--muted);line-height:1.5;font-size:15px}
-  .dots{margin:26px 0 4px;display:flex;gap:8px;justify-content:center}
-  .dots span{
-    width:10px;height:10px;border-radius:50%;background:var(--accent);
-    opacity:.3;animation:b 1.2s infinite ease-in-out;
-  }
-  .dots span:nth-child(2){animation-delay:.2s}
-  .dots span:nth-child(3){animation-delay:.4s}
-  @keyframes b{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-6px)}}
-  .foot{margin-top:24px;font-size:12px;color:var(--muted)}
+:root{
+  --bordeaux:#9B193B; --bordeaux-d:#7d1430; --bordeaux-l:#b83a58;
+  --bg:#ece5dd; --bar:#9B193B; --me:#f6d9e0; --me-b:#efc2cf;
+  --other:#ffffff; --ink:#111; --muted:#667; --line:#d9d2ca;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{height:100%; margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--ink); overflow:hidden;
+  -webkit-user-select:none; user-select:none}
+#app{height:100%; height:100dvh; display:flex; flex-direction:column}
+.hidden{display:none !important}
+
+/* ---------- LOGIN ---------- */
+#login{height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:linear-gradient(160deg,#7d1430,#9B193B 55%,#b83a58); color:#fff; padding:28px; text-align:center}
+#login .logo{font-size:30px; font-weight:800; letter-spacing:.5px; margin-bottom:6px}
+#login .sub{opacity:.85; margin-bottom:34px; font-size:15px}
+#login .card{background:#fff; color:#111; border-radius:20px; padding:24px 20px; width:100%; max-width:360px;
+  box-shadow:0 18px 50px rgba(0,0,0,.3)}
+#login h2{margin:0 0 4px; font-size:19px}
+#login p.hint{margin:0 0 18px; font-size:13px; color:var(--muted)}
+#code{width:100%; padding:15px 16px; border:2px solid var(--line); border-radius:14px; font-size:17px;
+  text-align:center; letter-spacing:1px; outline:none; -webkit-user-select:text; user-select:text}
+#code:focus{border-color:var(--bordeaux)}
+#login button{margin-top:16px; width:100%; padding:15px; border:0; border-radius:14px; background:var(--bordeaux);
+  color:#fff; font-size:17px; font-weight:700; cursor:pointer}
+#login button:active{background:var(--bordeaux-d)}
+#loginErr{color:#c0392b; font-size:14px; min-height:20px; margin-top:12px; font-weight:600}
+#login .foot{margin-top:26px; font-size:12px; opacity:.75; max-width:360px}
+
+/* ---------- HEADER ---------- */
+#head{background:var(--bar); color:#fff; display:flex; align-items:center; gap:10px; padding:10px 12px;
+  padding-top:calc(10px + env(safe-area-inset-top)); flex:0 0 auto; box-shadow:0 2px 6px rgba(0,0,0,.18)}
+#head .av{width:40px; height:40px; border-radius:50%; background:#fff2; display:flex; align-items:center;
+  justify-content:center; font-weight:700; font-size:17px; overflow:hidden}
+#head .av img{width:100%; height:100%; object-fit:cover}
+#head .who{flex:1; min-width:0}
+#head .who .nm{font-weight:700; font-size:17px; line-height:1.1}
+#head .who .st{font-size:12px; opacity:.9; margin-top:2px}
+#head .ico{width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%;
+  cursor:pointer; font-size:20px}
+#head .ico:active{background:#fff2}
+
+/* ---------- MESSAGES ---------- */
+#scroll{flex:1 1 auto; overflow-y:auto; padding:10px 10px 4px; -webkit-overflow-scrolling:touch;
+  background-image:linear-gradient(rgba(236,229,221,.6),rgba(236,229,221,.6))}
+.daysep{text-align:center; margin:12px 0}
+.daysep span{background:#d9ccc4; color:#5a4; color:#6b5; color:#705b52; font-size:12px; padding:4px 12px;
+  border-radius:10px; font-weight:600; color:#6b5248}
+.row{display:flex; margin:3px 0; padding:0 2px}
+.row.me{justify-content:flex-end}
+.bub{max-width:82%; border-radius:14px; padding:6px 9px 5px; position:relative; font-size:15.5px; line-height:1.35;
+  box-shadow:0 1px .5px rgba(0,0,0,.13); word-wrap:break-word; overflow-wrap:anywhere; cursor:pointer}
+.row.me .bub{background:var(--me); border:1px solid var(--me-b); border-bottom-right-radius:4px}
+.row.other .bub{background:var(--other); border-bottom-left-radius:4px}
+.bub .txt{white-space:pre-wrap; -webkit-user-select:text; user-select:text}
+.bub .meta{display:flex; align-items:center; gap:4px; justify-content:flex-end; margin-top:2px}
+.bub .time{font-size:10.5px; color:var(--muted)}
+.bub .tick{font-size:12px; color:#8aa; line-height:1}
+.bub .tick.read{color:#2b7fff}
+.bub.del{opacity:.75}
+.bub.del .txt{font-style:italic; color:var(--muted); display:flex; align-items:center; gap:5px}
+.reply-q{border-left:3px solid var(--bordeaux); background:#00000008; border-radius:6px; padding:3px 7px;
+  margin-bottom:4px; font-size:13px; color:#444; max-height:54px; overflow:hidden}
+.reply-q b{color:var(--bordeaux); font-size:12px; display:block}
+.media{border-radius:10px; overflow:hidden; margin:-2px -3px 2px; max-width:62vw}
+.media img,.media video{display:block; width:100%; max-height:48vh; object-fit:cover; background:#0001}
+.media .ph{width:200px; max-width:60vw; aspect-ratio:3/4; display:flex; align-items:center; justify-content:center;
+  background:#e8e0d8; color:var(--muted); font-size:13px}
+.filecard{display:flex; align-items:center; gap:10px; padding:8px 6px; min-width:200px; max-width:70vw}
+.filecard .fi{width:42px; height:42px; border-radius:10px; background:var(--bordeaux); color:#fff; display:flex;
+  align-items:center; justify-content:center; font-size:20px; flex:0 0 auto}
+.filecard .fn{font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.filecard .fs{font-size:12px; color:var(--muted)}
+.react{position:absolute; bottom:-11px; right:8px; background:#fff; border:1px solid var(--line);
+  border-radius:12px; padding:0 5px; font-size:13px; box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.row.me .react{right:auto; left:8px}
+.progress{height:4px; background:#0002; border-radius:3px; overflow:hidden; margin-top:4px}
+.progress i{display:block; height:100%; background:var(--bordeaux); width:0}
+
+/* ---------- INPUT ---------- */
+#bar{flex:0 0 auto; display:flex; align-items:flex-end; gap:6px; padding:7px 8px;
+  padding-bottom:calc(7px + env(safe-area-inset-bottom)); background:#f2ece6; border-top:1px solid var(--line)}
+#bar .rnd{width:44px; height:44px; flex:0 0 auto; border-radius:50%; border:0; background:var(--bordeaux); color:#fff;
+  font-size:21px; display:flex; align-items:center; justify-content:center; cursor:pointer}
+#bar .rnd.ghost{background:#dfd6cd; color:#6b5248}
+#bar .rnd:active{filter:brightness(.92)}
+#inwrap{flex:1; background:#fff; border-radius:22px; display:flex; align-items:center; padding:2px 4px 2px 14px; min-height:44px}
+#msg{flex:1; border:0; outline:none; font-size:16px; resize:none; max-height:120px; padding:10px 0; background:transparent;
+  font-family:inherit; -webkit-user-select:text; user-select:text; line-height:1.3}
+#replyBar{display:flex; align-items:center; gap:8px; background:#e9e1d9; padding:6px 10px; border-top:1px solid var(--line)}
+#replyBar .q{flex:1; border-left:3px solid var(--bordeaux); padding-left:8px; font-size:13px; color:#444; overflow:hidden}
+#replyBar .q b{color:var(--bordeaux); display:block; font-size:12px}
+#replyBar .x{font-size:20px; color:var(--muted); padding:4px 8px; cursor:pointer}
+
+/* ---------- LIGHTBOX ---------- */
+#lb{position:fixed; inset:0; background:#000; z-index:50; display:flex; flex-direction:column; align-items:center;
+  justify-content:center}
+#lb .close{position:absolute; top:calc(10px + env(safe-area-inset-top)); right:14px; color:#fff; font-size:30px;
+  z-index:2; cursor:pointer; width:44px; height:44px; display:flex; align-items:center; justify-content:center}
+#lb img,#lb video{max-width:100%; max-height:100%; object-fit:contain}
+#lb .dl{position:absolute; bottom:calc(16px + env(safe-area-inset-bottom)); background:#fff2; color:#fff;
+  border:1px solid #fff5; padding:10px 20px; border-radius:30px; font-size:15px; cursor:pointer}
+
+/* ---------- SHEET (actions) ---------- */
+#sheetBg{position:fixed; inset:0; background:#0006; z-index:60; display:flex; align-items:flex-end}
+#sheet{background:#fff; width:100%; border-radius:18px 18px 0 0; padding:8px 0 calc(8px + env(safe-area-inset-bottom));
+  animation:up .18s ease}
+@keyframes up{from{transform:translateY(100%)}}
+#sheet .emojis{display:flex; justify-content:space-around; padding:10px 14px 6px; font-size:28px; border-bottom:1px solid var(--line)}
+#sheet .emojis span{cursor:pointer; transition:transform .1s}
+#sheet .emojis span:active{transform:scale(1.4)}
+#sheet .act{display:flex; align-items:center; gap:14px; padding:15px 22px; font-size:16px; cursor:pointer}
+#sheet .act:active{background:#f3eee9}
+#sheet .act.danger{color:#c0392b}
+#sheet .act .i{font-size:20px; width:24px; text-align:center}
+
+#toast{position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#000a; color:#fff;
+  padding:9px 16px; border-radius:20px; font-size:14px; z-index:80; opacity:0; transition:opacity .2s; pointer-events:none}
+#toast.show{opacity:1}
+.sysmenu{position:fixed; z-index:70; background:#fff; border-radius:14px; box-shadow:0 10px 40px rgba(0,0,0,.3);
+  overflow:hidden; min-width:180px}
+.sysmenu div{padding:14px 18px; font-size:15px; cursor:pointer}
+.sysmenu div:active{background:#f3eee9}
+.sysmenu div.danger{color:#c0392b}
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">💬</div>
-    <h1>Discussion</h1>
-    <p>Votre messagerie privée à deux.</p>
-    <p>L'application arrive ici très bientôt.</p>
-    <div class="dots"><span></span><span></span><span></span></div>
-    <div class="foot">Bollywood · privé</div>
+<div id="app">
+  <!-- LOGIN -->
+  <section id="login">
+    <div class="logo">Discussion</div>
+    <div class="sub">Privé · rien que nous deux</div>
+    <div class="card">
+      <h2>Connexion</h2>
+      <p class="hint">Entre ton code personnel</p>
+      <input id="code" type="password" inputmode="text" autocomplete="off" autocapitalize="off"
+             spellcheck="false" placeholder="ton code">
+      <button id="loginBtn">Entrer</button>
+      <div id="loginErr"></div>
+    </div>
+    <div class="foot">🔒 Tes messages sont protégés : personne ne peut les lire sans le code, même avec l'adresse.</div>
+  </section>
+
+  <!-- CHAT -->
+  <header id="head" class="hidden">
+    <div class="ico" id="backLogo" style="font-size:22px">💬</div>
+    <div class="av" id="headAv"></div>
+    <div class="who">
+      <div class="nm" id="headName">…</div>
+      <div class="st" id="headStatus">connexion…</div>
+    </div>
+    <div class="ico" id="menuBtn">⋮</div>
+  </header>
+
+  <div id="replyBar" class="hidden">
+    <div class="q"><b id="replyWho"></b><span id="replyTxt"></span></div>
+    <div class="x" id="replyX">✕</div>
   </div>
+
+  <main id="scroll" class="hidden"></main>
+
+  <footer id="bar" class="hidden">
+    <button class="rnd ghost" id="attachBtn" title="Joindre">＋</button>
+    <div id="inwrap"><textarea id="msg" rows="1" placeholder="Message" enterkeyhint="send"></textarea></div>
+    <button class="rnd" id="sendBtn" title="Envoyer">➤</button>
+  </footer>
+</div>
+
+<input type="file" id="fileImg" accept="image/*,video/*" class="hidden" multiple>
+<input type="file" id="fileAny" class="hidden" multiple>
+<input type="file" id="fileCam" accept="image/*" capture="environment" class="hidden">
+<div id="toast"></div>
+
+<script>
+const SUPA_URL="https://akczaszjglgilzqcehdw.supabase.co";
+const SUPA_KEY="sb_publishable_QGd8DtYfRmGaEkISDTaCdA_YFdGwkIh";
+const CHUNK=6*1024*1024;
+const $=id=>document.getElementById(id);
+
+let CODE=localStorage.getItem('disc_code')||"";
+let ME=localStorage.getItem('disc_author')||"";
+let MYNAME=localStorage.getItem('disc_name')||"";
+let msgs=new Map();      // id -> message
+let maxRev=0;
+let otherLast=0;         // other person's last-read timestamp
+let otherSeenAt=0;       // when other last pinged (for presence)
+let profiles={};         // author -> {name,avatar}
+let replyTo=null;
+let pollTimer=null, seenTimer=null;
+let mediaCache={};       // id -> objectURL
+
+/* ---------- API ---------- */
+async function rpc(fn,args){
+  const r=await fetch(SUPA_URL+"/rest/v1/rpc/"+fn,{
+    method:"POST",
+    headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify(args)});
+  if(!r.ok) throw new Error("rpc "+fn+" "+r.status);
+  const t=await r.text();
+  return t?JSON.parse(t):null;
+}
+async function mediaCall(body){
+  const r=await fetch(SUPA_URL+"/functions/v1/media",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({code:CODE,...body})});
+  if(!r.ok) throw new Error("media "+r.status);
+  return r.json();
+}
+
+/* ---------- LOGIN ---------- */
+$("loginBtn").onclick=doLogin;
+$("code").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+async function doLogin(){
+  const c=$("code").value.trim();
+  if(!c){return;}
+  $("loginErr").textContent="";
+  $("loginBtn").textContent="…"; $("loginBtn").disabled=true;
+  try{
+    const res=await rpc("app_login",{p_code:c});
+    if(res&&res.ok){
+      CODE=c; ME=res.author; MYNAME=res.name;
+      localStorage.setItem('disc_code',c);
+      localStorage.setItem('disc_author',ME);
+      localStorage.setItem('disc_name',MYNAME);
+      startChat();
+    }else{
+      $("loginErr").textContent="Code incorrect";
+    }
+  }catch(e){ $("loginErr").textContent="Erreur de connexion, réessaie"; }
+  $("loginBtn").textContent="Entrer"; $("loginBtn").disabled=false;
+}
+
+function otherId(){ return ME==="patron"?"simran":"patron"; }
+function nameOf(a){ return (profiles[a]&&profiles[a].name) || (a==="patron"?"Moi":a==="simran"?"Simran":a); }
+
+/* ---------- START ---------- */
+async function startChat(){
+  $("login").classList.add("hidden");
+  ["head","scroll","bar"].forEach(i=>$(i).classList.remove("hidden"));
+  $("headName").textContent = ME==="patron"?"Simran":"Moi";   // other person's name, refined after profiles
+  try{ await loadProfiles(); }catch(e){}
+  $("headName").textContent = nameOf(otherId());
+  paintAvatar();
+  await sync(true);
+  startPolling();
+}
+async function loadProfiles(){
+  const list=await rpc("app_profiles",{p_code:CODE})||[];
+  profiles={}; list.forEach(p=>profiles[p.id]={name:p.name,avatar:p.avatar});
+}
+function paintAvatar(){
+  const o=otherId(); const p=profiles[o];
+  const av=$("headAv");
+  if(p&&p.avatar){ av.innerHTML='<img src="'+p.avatar+'">'; }
+  else{ av.textContent=(nameOf(o)[0]||"?").toUpperCase(); }
+}
+
+/* ---------- SYNC / POLL ---------- */
+async function sync(initial){
+  let rows;
+  try{ rows=await rpc("app_sync",{p_code:CODE,p_since_rev:initial?0:maxRev}); }
+  catch(e){ return; }
+  if(!rows||!rows.length){ if(initial) render(); return; }
+  let changed=false, newIncoming=false;
+  for(const m of rows){
+    if(m.rev>maxRev) maxRev=m.rev;
+    const prev=msgs.get(m.id);
+    msgs.set(m.id,m);
+    changed=true;
+    if(!initial && !prev && m.author!==ME) newIncoming=true;
+  }
+  if(changed) render();
+  if(newIncoming){ navigator.vibrate&&navigator.vibrate(30); pushSeen(); }
+  if(initial) pushSeen();
+}
+function startPolling(){
+  clearInterval(pollTimer); clearInterval(seenTimer);
+  pollTimer=setInterval(()=>{ if(!document.hidden) sync(false); },3000);
+  seenTimer=setInterval(()=>{ if(!document.hidden) pushSeen(); },5000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ sync(false); pushSeen(); } });
+}
+async function pushSeen(){
+  let last=0;
+  msgs.forEach(m=>{ if(m.author!==ME && m.t>last) last=m.t; });
+  try{
+    const r=await rpc("app_seen",{p_code:CODE,p_last:last});
+    if(r){
+      const prev=otherLast;
+      otherLast=r.other_last||0;
+      if(otherLast!==prev){ otherSeenAt=Date.now(); updateTicks(); }
+      refreshStatus();
+    }
+  }catch(e){}
+}
+function refreshStatus(){
+  const online=(Date.now()-otherSeenAt)<14000;
+  $("headStatus").textContent = online? "en ligne" : "en discussion";
+}
+
+/* ---------- RENDER ---------- */
+function sorted(){
+  return [...msgs.values()].sort((a,b)=> (a.t-b.t)|| (a.rev-b.rev));
+}
+function sameDay(a,b){const x=new Date(a),y=new Date(b);return x.toDateString()===y.toDateString();}
+function dayLabel(t){
+  const d=new Date(t), now=new Date();
+  if(d.toDateString()===now.toDateString())return"Aujourd'hui";
+  const y=new Date(now); y.setDate(now.getDate()-1);
+  if(d.toDateString()===y.toDateString())return"Hier";
+  return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+}
+function hhmm(t){return new Date(t).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function fsize(n){ if(!n)return""; if(n<1024)return n+" o"; if(n<1048576)return (n/1024).toFixed(0)+" Ko"; return (n/1048576).toFixed(1)+" Mo"; }
+
+function nearBottom(){const s=$("scroll");return s.scrollHeight-s.scrollTop-s.clientHeight<120;}
+function render(){
+  const s=$("scroll"); const stick=nearBottom();
+  const list=sorted();
+  let html="", lastT=0;
+  for(const m of list){
+    if(!lastT || !sameDay(lastT,m.t)){ html+='<div class="daysep"><span>'+dayLabel(m.t)+'</span></div>'; }
+    lastT=m.t;
+    html+=bubble(m);
+  }
+  s.innerHTML=html;
+  bindBubbles();
+  loadVisibleMedia();
+  updateTicks();
+  if(stick) s.scrollTop=s.scrollHeight;
+}
+function bubble(m){
+  const mine=m.author===ME;
+  let inner="";
+  if(m.deleted){
+    inner='<div class="txt">🚫 Message supprimé</div>';
+    return '<div class="row '+(mine?'me':'other')+'" data-id="'+m.id+'"><div class="bub del">'+inner+
+      '<div class="meta"><span class="time">'+hhmm(m.t)+'</span></div></div></div>';
+  }
+  if(m.reply){ inner+='<div class="reply-q"><b>'+esc(nameOf(m.reply.author))+'</b>'+esc(m.reply.text||mediaWord(m.reply))+'</div>'; }
+  if(m.kind==="image"){
+    inner+='<div class="media" data-media="'+m.id+'">'+(m.thumb?'<img src="'+m.thumb+'">':'<div class="ph">📷 photo…</div>')+'</div>';
+  }else if(m.kind==="video"){
+    inner+='<div class="media" data-media="'+m.id+'">'+(m.thumb?'<img src="'+m.thumb+'">':'<div class="ph">🎬 vidéo…</div>')+
+      '<div style="text-align:center;margin-top:-30px;position:relative;color:#fff;font-size:34px;pointer-events:none">▶</div></div>';
+  }else if(m.kind==="file"){
+    inner+='<div class="filecard" data-media="'+m.id+'"><div class="fi">📄</div><div style="min-width:0"><div class="fn">'+
+      esc(m.name||"fichier")+'</div><div class="fs">'+fsize(m.size)+'</div></div></div>';
+  }
+  if(m.text){ inner+='<div class="txt">'+linkify(esc(m.text))+'</div>'; }
+  let ticks="";
+  if(mine){ ticks='<span class="tick'+(otherLast>=m.t?' read':'')+'">'+(otherLast>=m.t?'✓✓':'✓')+'</span>'; }
+  let react="";
+  if(m.reactions&&Object.keys(m.reactions).length){
+    const set=[...new Set(Object.values(m.reactions))].join("");
+    react='<div class="react">'+set+'</div>';
+  }
+  return '<div class="row '+(mine?'me':'other')+'" data-id="'+m.id+'"><div class="bub">'+inner+
+    '<div class="meta">'+(m.edited?'<span class="time">modifié</span>':'')+
+    '<span class="time">'+hhmm(m.t)+'</span>'+ticks+'</div>'+react+'</div></div>';
+}
+function mediaWord(r){ return r.kind==="image"?"📷 Photo":r.kind==="video"?"🎬 Vidéo":r.kind==="file"?"📄 Fichier":""; }
+function linkify(t){ return t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" style="color:var(--bordeaux)">$1</a>'); }
+function updateTicks(){
+  document.querySelectorAll('.row.me').forEach(row=>{
+    const m=msgs.get(row.dataset.id); if(!m||m.deleted) return;
+    const tk=row.querySelector('.tick'); if(!tk) return;
+    const read=otherLast>=m.t;
+    tk.textContent=read?'✓✓':'✓'; tk.classList.toggle('read',read);
+  });
+}
+
+/* ---------- MEDIA DISPLAY ---------- */
+async function loadVisibleMedia(){
+  document.querySelectorAll('[data-media]').forEach(async el=>{
+    const id=el.dataset.media; const m=msgs.get(id); if(!m) return;
+    if(el._loaded) return; el._loaded=true;
+    if(m.kind==="image"&&m.thumb) {/* thumb already shown; full loads on tap */}
+  });
+}
+async function getFullMedia(m){
+  if(mediaCache[m.id]) return mediaCache[m.id];
+  const paths=m.vparts||[]; if(!paths.length) return null;
+  const {urls}=await mediaCall({action:"down",paths});
+  const blobs=[];
+  for(const p of paths){
+    const u=urls[p]; if(!u) throw new Error("url manquante");
+    const r=await fetch(u); blobs.push(await r.blob());
+  }
+  const blob=new Blob(blobs,{type:m.mime||"application/octet-stream"});
+  const url=URL.createObjectURL(blob);
+  mediaCache[m.id]=url; return url;
+}
+
+/* ---------- LIGHTBOX (with back-gesture close) ---------- */
+let lbOpen=false;
+async function openMedia(m){
+  if(m.kind==="file"){ await downloadFile(m); return; }
+  showLightbox(m);
+}
+async function showLightbox(m){
+  const lb=document.createElement("div"); lb.id="lb";
+  lb.innerHTML='<div class="close">✕</div><div class="ph" style="color:#fff">chargement…</div>';
+  document.body.appendChild(lb); lbOpen=true;
+  history.pushState({lb:1},"");
+  const close=()=>{ if(!lbOpen)return; lbOpen=false; lb.remove(); };
+  lb.querySelector(".close").onclick=()=>history.back();
+  lb._close=close;
+  try{
+    const url=await getFullMedia(m);
+    const el = m.kind==="video"
+      ? '<video src="'+url+'" controls autoplay playsinline></video>'
+      : '<img src="'+url+'">';
+    lb.innerHTML='<div class="close">✕</div>'+el+'<div class="dl">⬇ Enregistrer</div>';
+    lb.querySelector(".close").onclick=()=>history.back();
+    lb.querySelector(".dl").onclick=()=>saveBlobUrl(url,m.name||(m.kind==="video"?"video.mp4":"photo.jpg"));
+  }catch(e){ lb.innerHTML='<div class="close">✕</div><div style="color:#fff">Erreur de chargement</div>';
+    lb.querySelector(".close").onclick=()=>history.back(); }
+}
+window.addEventListener("popstate",()=>{
+  if(lbOpen){ const lb=$("lb"); if(lb&&lb._close) lb._close(); return; }
+  if(sheetOpen){ closeSheet(); }
+});
+function saveBlobUrl(url,name){ const a=document.createElement("a"); a.href=url; a.download=name; a.click(); }
+async function downloadFile(m){
+  toast("Téléchargement…");
+  try{ const url=await getFullMedia(m); saveBlobUrl(url,m.name||"fichier"); }
+  catch(e){ toast("Erreur"); }
+}
+
+/* ---------- SEND TEXT ---------- */
+const msgEl=$("msg");
+msgEl.addEventListener("input",()=>{ msgEl.style.height="auto"; msgEl.style.height=Math.min(msgEl.scrollHeight,120)+"px"; });
+msgEl.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendText(); }
+});
+$("sendBtn").onclick=sendText;
+async function sendText(){
+  const t=msgEl.value.trim(); if(!t) return;
+  msgEl.value=""; msgEl.style.height="auto";
+  const payload={kind:"text",text:t};
+  if(replyTo){ payload.reply={author:replyTo.author,text:replyTo.text||mediaWord(replyTo),kind:replyTo.kind}; clearReply(); }
+  try{
+    const m=await rpc("app_send",{p_code:CODE,p_payload:payload});
+    if(m){ msgs.set(m.id,m); if(m.rev>maxRev)maxRev=m.rev; render(); }
+  }catch(e){ toast("Échec de l'envoi"); }
+}
+
+/* ---------- SEND MEDIA ---------- */
+$("attachBtn").onclick=()=>{
+  openSysMenu($("attachBtn"),[
+    {t:"📷 Photo / Vidéo",f:()=>$("fileImg").click()},
+    {t:"📸 Appareil photo",f:()=>$("fileCam").click()},
+    {t:"📎 Document",f:()=>$("fileAny").click()},
+  ]);
+};
+$("fileImg").onchange=e=>handleFiles(e.target.files);
+$("fileAny").onchange=e=>handleFiles(e.target.files);
+$("fileCam").onchange=e=>handleFiles(e.target.files);
+async function handleFiles(files){
+  for(const f of files){ await sendFile(f); }
+  $("fileImg").value=$("fileAny").value=$("fileCam").value="";
+}
+async function sendFile(file){
+  const isImg=file.type.startsWith("image/");
+  const isVid=file.type.startsWith("video/");
+  const kind=isImg?"image":isVid?"video":"file";
+  // temp bubble with progress
+  const tempId="tmp_"+Math.random().toString(36).slice(2);
+  const tmp={id:tempId,author:ME,kind,text:null,mime:file.type,name:file.name,size:file.size,
+    thumb:null,t:Date.now(),rev:0,reactions:{},_up:0};
+  msgs.set(tempId,tmp); render(); showProgress(tempId,2);
+  try{
+    let thumb=null;
+    if(isImg) thumb=await makeImageThumb(file);
+    else if(isVid) thumb=await makeVideoThumb(file);
+    tmp.thumb=thumb;
+    const nparts=Math.max(1,Math.ceil(file.size/CHUNK));
+    const up=await mediaCall({action:"up",parts:nparts});
+    const paths=[];
+    for(let i=0;i<nparts;i++){
+      const part=up.parts[i];
+      const slice=file.slice(i*CHUNK,(i+1)*CHUNK);
+      const r=await fetch(part.signedUrl,{method:"PUT",headers:{"Content-Type":"application/octet-stream"},body:slice});
+      if(!r.ok) throw new Error("upload "+r.status);
+      paths.push(part.path);
+      showProgress(tempId, Math.round(((i+1)/nparts)*100));
+    }
+    const payload={kind,mime:file.type,name:file.name,size:file.size,vparts:paths,thumb};
+    if(isVid){ const d=await videoDuration(file).catch(()=>0); if(d)payload.dur=Math.round(d); }
+    if(replyTo){ payload.reply={author:replyTo.author,text:replyTo.text||mediaWord(replyTo),kind:replyTo.kind}; clearReply(); }
+    const m=await rpc("app_send",{p_code:CODE,p_payload:payload});
+    msgs.delete(tempId);
+    if(m){ msgs.set(m.id,m); if(m.rev>maxRev)maxRev=m.rev; }
+    render();
+  }catch(e){
+    msgs.delete(tempId); render(); toast("Échec de l'envoi du fichier");
+  }
+}
+function showProgress(id,pct){
+  const row=document.querySelector('.row[data-id="'+id+'"] .bub'); if(!row) return;
+  let pr=row.querySelector('.progress');
+  if(!pr){ pr=document.createElement('div'); pr.className='progress'; pr.innerHTML='<i></i>'; row.appendChild(pr); }
+  pr.querySelector('i').style.width=pct+"%";
+}
+function makeImageThumb(file){
+  return new Promise((res)=>{
+    const img=new Image(); const u=URL.createObjectURL(file);
+    img.onload=()=>{ URL.revokeObjectURL(u); res(downscale(img,img.width,img.height)); };
+    img.onerror=()=>res(null); img.src=u;
+  });
+}
+function makeVideoThumb(file){
+  return new Promise((res)=>{
+    const v=document.createElement("video"); const u=URL.createObjectURL(file);
+    v.muted=true; v.playsInline=true; v.src=u;
+    v.onloadeddata=()=>{ v.currentTime=Math.min(0.5,(v.duration||1)/3); };
+    v.onseeked=()=>{ try{res(downscale(v,v.videoWidth,v.videoHeight)); }catch(e){res(null);} URL.revokeObjectURL(u); };
+    v.onerror=()=>res(null);
+  });
+}
+function downscale(src,w,h){
+  const max=480; let nw=w,nh=h;
+  if(w>h&&w>max){ nw=max; nh=Math.round(h*max/w); } else if(h>=w&&h>max){ nh=max; nw=Math.round(w*max/h); }
+  const c=document.createElement("canvas"); c.width=nw; c.height=nh;
+  c.getContext("2d").drawImage(src,0,0,nw,nh);
+  try{ return c.toDataURL("image/jpeg",0.6); }catch(e){ return null; }
+}
+function videoDuration(file){ return new Promise((res,rej)=>{ const v=document.createElement("video"); v.preload="metadata";
+  v.onloadedmetadata=()=>{res(v.duration);}; v.onerror=rej; v.src=URL.createObjectURL(file); }); }
+
+/* ---------- BUBBLE INTERACTIONS ---------- */
+function bindBubbles(){
+  document.querySelectorAll('.row').forEach(row=>{
+    const id=row.dataset.id; const m=msgs.get(id); if(!m) return;
+    const bub=row.querySelector('.bub');
+    const media=row.querySelector('[data-media]');
+    if(media){ media.onclick=(e)=>{ e.stopPropagation(); if(m.vparts) openMedia(m); }; }
+    let lpTimer=null, moved=false, sx=0,sy=0;
+    const start=(x,y)=>{ moved=false; sx=x; sy=y; lpTimer=setTimeout(()=>{ if(!moved) openSheet(m); },420); };
+    const move=(x,y)=>{ if(Math.abs(x-sx)>12||Math.abs(y-sy)>12) moved=true; if(moved&&lpTimer){clearTimeout(lpTimer);lpTimer=null;} };
+    const end=()=>{ if(lpTimer){clearTimeout(lpTimer);lpTimer=null;} };
+    bub.addEventListener("touchstart",e=>start(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+    bub.addEventListener("touchmove",e=>move(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+    bub.addEventListener("touchend",end);
+    // double tap heart
+    let lastTap=0;
+    bub.addEventListener("touchend",()=>{ const n=Date.now(); if(n-lastTap<300&&!m.deleted){ react(m,"❤️"); } lastTap=n; });
+    bub.oncontextmenu=e=>{ e.preventDefault(); if(!m.deleted) openSheet(m); };
+  });
+}
+
+/* ---------- ACTION SHEET ---------- */
+let sheetOpen=false, sheetBgEl=null;
+function openSheet(m){
+  if(m.deleted) return;
+  navigator.vibrate&&navigator.vibrate(15);
+  closeSheet();
+  const bg=document.createElement("div"); bg.id="sheetBg"; sheetBgEl=bg;
+  const mine=m.author===ME;
+  const emojis=["❤️","😂","👍","😮","😢","🙏"];
+  let acts="";
+  acts+='<div class="act" data-a="reply"><span class="i">↩️</span>Répondre</div>';
+  if(m.text){ acts+='<div class="act" data-a="copy"><span class="i">📋</span>Copier le texte</div>'; }
+  if(m.kind!=="text"&&m.vparts){ acts+='<div class="act" data-a="save"><span class="i">⬇️</span>Enregistrer</div>'; }
+  if(mine&&m.kind==="text"){ acts+='<div class="act" data-a="edit"><span class="i">✏️</span>Modifier</div>'; }
+  acts+='<div class="act danger" data-a="del"><span class="i">🗑️</span>Supprimer pour nous deux</div>';
+  bg.innerHTML='<div id="sheet"><div class="emojis">'+emojis.map(e=>'<span data-e="'+e+'">'+e+'</span>').join("")+
+    '</div>'+acts+'</div>';
+  document.body.appendChild(bg); sheetOpen=true;
+  history.pushState({sheet:1},"");
+  bg.onclick=e=>{ if(e.target===bg) history.back(); };
+  bg.querySelectorAll('.emojis span').forEach(s=>s.onclick=()=>{ react(m,s.dataset.e); history.back(); });
+  bg.querySelectorAll('.act').forEach(a=>a.onclick=()=>{ doAction(a.dataset.a,m); });
+}
+function closeSheet(){ if(sheetBgEl){ sheetBgEl.remove(); sheetBgEl=null; } sheetOpen=false; }
+function doAction(a,m){
+  if(a==="reply"){ setReply(m); history.back(); }
+  else if(a==="copy"){ navigator.clipboard&&navigator.clipboard.writeText(m.text||""); toast("Copié"); history.back(); }
+  else if(a==="save"){ history.back(); openMedia(m); }
+  else if(a==="edit"){ history.back(); startEdit(m); }
+  else if(a==="del"){ history.back(); delMsg(m); }
+}
+async function react(m,emoji){
+  try{ const r=await rpc("app_react",{p_code:CODE,p_id:m.id,p_emoji:emoji}); if(r){ msgs.set(r.id,r); if(r.rev>maxRev)maxRev=r.rev; render(); } }catch(e){}
+}
+async function delMsg(m){
+  try{
+    const r=await rpc("app_delete",{p_code:CODE,p_id:m.id});
+    // remove stored media
+    if(r&&r.vparts){ try{ await mediaCall({action:"del",paths:r.vparts}); }catch(e){} }
+    const mm=msgs.get(m.id); if(mm){ mm.deleted=true; mm.text=null; mm.vparts=null; mm.thumb=null; mm.reactions={}; }
+    if(mediaCache[m.id]){ URL.revokeObjectURL(mediaCache[m.id]); delete mediaCache[m.id]; }
+    render();
+    sync(false);
+  }catch(e){ toast("Erreur"); }
+}
+async function startEdit(m){
+  const t=prompt("Modifier le message :",m.text||""); if(t==null) return;
+  try{ const r=await rpc("app_edit",{p_code:CODE,p_id:m.id,p_text:t}); if(r){ msgs.set(r.id,r); render(); } }catch(e){ toast("Erreur"); }
+}
+
+/* ---------- REPLY ---------- */
+function setReply(m){
+  replyTo=m;
+  $("replyWho").textContent=nameOf(m.author);
+  $("replyTxt").textContent=m.text||mediaWord(m);
+  $("replyBar").classList.remove("hidden");
+  msgEl.focus();
+}
+function clearReply(){ replyTo=null; $("replyBar").classList.add("hidden"); }
+$("replyX").onclick=clearReply;
+
+/* ---------- SYSTEM MENU (attach + header) ---------- */
+let menuEl=null;
+function openSysMenu(anchor,items){
+  closeMenu();
+  const r=anchor.getBoundingClientRect();
+  const m=document.createElement("div"); m.className="sysmenu"; menuEl=m;
+  m.innerHTML=items.map((it,i)=>'<div data-i="'+i+'" class="'+(it.danger?'danger':'')+'">'+it.t+'</div>').join("");
+  document.body.appendChild(m);
+  const top=Math.min(r.top, window.innerHeight-m.offsetHeight-20);
+  m.style.left=Math.max(8,Math.min(r.left, window.innerWidth-m.offsetWidth-8))+"px";
+  m.style.top=(r.top<160? r.bottom+6 : r.top-m.offsetHeight-6)+"px";
+  items.forEach((it,i)=>m.querySelector('[data-i="'+i+'"]').onclick=()=>{ closeMenu(); it.f(); });
+  setTimeout(()=>document.addEventListener("click",closeMenu,{once:true}),0);
+}
+function closeMenu(){ if(menuEl){ menuEl.remove(); menuEl=null; } }
+
+$("menuBtn").onclick=()=>{
+  openSysMenu($("menuBtn"),[
+    {t:"🖼️ Changer ma photo",f:changeAvatar},
+    {t:"🔄 Rafraîchir",f:()=>sync(true)},
+    {t:"🚪 Se déconnecter",danger:true,f:logout},
+  ]);
+};
+function changeAvatar(){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+  inp.onchange=async e=>{ const f=e.target.files[0]; if(!f)return; const thumb=await makeImageThumb(f);
+    try{ await rpc("app_set_profile",{p_code:CODE,p_name:MYNAME,p_avatar:thumb}); toast("Photo mise à jour"); }catch(err){} };
+  inp.click();
+}
+function logout(){
+  if(!confirm("Se déconnecter ?")) return;
+  localStorage.removeItem('disc_code'); localStorage.removeItem('disc_author'); localStorage.removeItem('disc_name');
+  location.reload();
+}
+
+/* ---------- TOAST ---------- */
+let toastT=null;
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove("show"),1800); }
+
+/* ---------- BOOT ---------- */
+if(CODE&&ME){ startChat(); }
+else { $("code").focus(); }
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
 </body>
 </html>
