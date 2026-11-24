@@ -373,13 +373,13 @@ async function doLogin(){
 }
 
 function otherId(){ return ME==="patron"?"simran":"patron"; }
-function nameOf(a){ return (profiles[a]&&profiles[a].name) || (a==="patron"?"Moi":a==="simran"?"Simran":a); }
+function nameOf(a){ return (profiles[a]&&profiles[a].name) || (a==="patron"?"Moi":a==="simran"?"Sensei":a); }
 
 /* ---------- START ---------- */
 async function startChat(){
   $("login").classList.add("hidden");
   ["head","scroll","bar"].forEach(i=>$(i).classList.remove("hidden"));
-  $("headName").textContent = ME==="patron"?"Simran":"Moi";   // other person's name, refined after profiles
+  $("headName").textContent = ME==="patron"?"Sensei":"Moi";   // other person's name, refined after profiles
   try{ await loadProfiles(); }catch(e){}
   $("headName").textContent = nameOf(otherId());
   paintAvatar();
