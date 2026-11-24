@@ -383,8 +383,10 @@ async function startChat(){
   try{ await loadProfiles(); }catch(e){}
   $("headName").textContent = nameOf(otherId());
   paintAvatar();
+  restorePendingBubbles();
   await sync(true);
   startPolling();
+  flushOutbox();
 }
 async function loadProfiles(){
   const list=await rpc("app_profiles",{p_code:CODE})||[];
@@ -419,7 +421,8 @@ function startPolling(){
   clearInterval(pollTimer); clearInterval(seenTimer);
   pollTimer=setInterval(()=>{ if(!document.hidden) sync(false); },3000);
   seenTimer=setInterval(()=>{ if(!document.hidden) pushSeen(); },2500);
-  document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ sync(false); pushSeen(); } else { pushSeen(false); } });
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ sync(false); pushSeen(); flushOutbox(); } else { pushSeen(false); } });
+  window.addEventListener("online",flushOutbox);
 }
 let myTyping=false, lastTypingSent=0;
 function setTyping(on){
@@ -533,7 +536,8 @@ function bubble(m){
   }
   if(m.text && m.kind!=="contact" && m.kind!=="location"){ inner+='<div class="txt">'+linkify(esc(m.text))+'</div>'; }
   let ticks="";
-  if(mine){ ticks='<span class="tick'+(otherLast>=m.t?' read':'')+'">'+(otherLast>=m.t?'✓✓':'✓')+'</span>'; }
+  if(m._pending){ ticks='<span class="tick">🕐</span>'; }
+  else if(mine){ ticks='<span class="tick'+(otherLast>=m.t?' read':'')+'">'+(otherLast>=m.t?'✓✓':'✓')+'</span>'; }
   let react="";
   if(m.reactions&&Object.keys(m.reactions).length){
     const set=[...new Set(Object.values(m.reactions))].join("");
@@ -548,7 +552,7 @@ function fmtDur(s){ s=Math.round(s||0); const m=Math.floor(s/60), x=s%60; return
 function linkify(t){ return t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" style="color:var(--bordeaux)">$1</a>'); }
 function updateTicks(){
   document.querySelectorAll('.row.me').forEach(row=>{
-    const m=msgs.get(row.dataset.id); if(!m||m.deleted) return;
+    const m=msgs.get(row.dataset.id); if(!m||m.deleted||m._pending) return;
     const tk=row.querySelector('.tick'); if(!tk) return;
     const read=otherLast>=m.t;
     tk.textContent=read?'✓✓':'✓'; tk.classList.toggle('read',read);
@@ -631,10 +635,41 @@ async function sendText(){
   msgEl.value=""; msgEl.style.height="auto"; refreshSendBtn(); setTyping(false);
   const payload={kind:"text",text:t};
   if(replyTo){ payload.reply={author:replyTo.author,text:replyTo.text||mediaWord(replyTo),kind:replyTo.kind}; clearReply(); }
-  try{
-    const m=await rpc("app_send",{p_code:CODE,p_payload:payload});
-    if(m){ msgs.set(m.id,m); if(m.rev>maxRev)maxRev=m.rev; render(); }
-  }catch(e){ toast("Échec de l'envoi"); }
+  queueSend(payload);
+}
+
+/* ---------- OUTBOX : envoi fiable avec réessai automatique ---------- */
+let outbox=[]; let flushing=false;
+try{ outbox=JSON.parse(localStorage.getItem('disc_outbox')||'[]'); }catch(e){ outbox=[]; }
+function saveOutbox(){ try{ localStorage.setItem('disc_outbox',JSON.stringify(outbox)); }catch(e){} }
+function queueSend(payload){
+  const tmpId="out_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+  const tmp={id:tmpId,author:ME,kind:payload.kind||'text',text:payload.text||null,
+    reply:payload.reply||null,t:Date.now(),rev:0,reactions:{},_pending:true};
+  msgs.set(tmpId,tmp);
+  outbox.push({tmpId,payload,t:tmp.t}); saveOutbox();
+  render(); flushOutbox();
+}
+async function flushOutbox(){
+  if(flushing||!outbox.length||!CODE) return;
+  flushing=true;
+  while(outbox.length){
+    const it=outbox[0];
+    try{
+      const m=await rpc("app_send",{p_code:CODE,p_payload:it.payload});
+      if(it.tmpId) msgs.delete(it.tmpId);
+      if(m){ msgs.set(m.id,m); if(m.rev>maxRev)maxRev=m.rev; }
+      outbox.shift(); saveOutbox(); render();
+    }catch(e){ break; }   // connexion absente : on garde en file, on réessaiera
+  }
+  flushing=false;
+}
+setInterval(flushOutbox,4000);
+// rebâtir les bulles en attente au démarrage (après un rechargement)
+function restorePendingBubbles(){
+  outbox.forEach(it=>{ if(it.tmpId && !msgs.has(it.tmpId)){
+    msgs.set(it.tmpId,{id:it.tmpId,author:ME,kind:it.payload.kind||'text',text:it.payload.text||null,
+      reply:it.payload.reply||null,t:it.t||Date.now(),rev:0,reactions:{},_pending:true}); } });
 }
 
 /* ---------- SEND MEDIA ---------- */
