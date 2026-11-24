@@ -289,7 +289,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
   </footer>
 </div>
 
-<input type="file" id="fileImg" accept="image/*,video/*" class="hidden" multiple>
+<input type="file" id="fileImg" accept="image/*" class="hidden" multiple>
+<input type="file" id="fileVid" accept="video/*" class="hidden" multiple>
 <input type="file" id="fileAny" class="hidden" multiple>
 <input type="file" id="fileCam" accept="image/*" capture="environment" class="hidden">
 <div id="toast"></div>
@@ -628,6 +629,7 @@ function openAttach(){
   const bg=document.createElement("div"); bg.id="attachBg"; attachEl=bg;
   const tiles=[
     {n:"Galerie",e:"🖼️",c:"#4a9eff",f:()=>$("fileImg").click()},
+    {n:"Vidéo",e:"🎬",c:"#e0399a",f:()=>$("fileVid").click()},
     {n:"Caméra",e:"📷",c:"#ff2e74",f:()=>$("fileCam").click()},
     {n:"Localisation",e:"📍",c:"#12b76a",f:shareLocation},
     {n:"Contact",e:"👤",c:"#0a84ff",f:shareContact},
@@ -647,6 +649,7 @@ $("camBtn").onclick=()=>$("fileCam").click();
 $("videoBtn").onclick=()=>toast("Les appels vidéo arrivent bientôt 📹");
 $("callBtn").onclick=()=>toast("Les appels arrivent bientôt 📞");
 $("fileImg").onchange=e=>handleFiles(e.target.files);
+$("fileVid").onchange=e=>handleFiles(e.target.files);
 $("fileAny").onchange=e=>handleFiles(e.target.files);
 $("fileCam").onchange=e=>handleFiles(e.target.files);
 function isMediaFile(f){ return f.type.startsWith("image/")||f.type.startsWith("video/"); }
@@ -654,7 +657,7 @@ async function handleFiles(files){
   const arr=[...files];
   const media=arr.filter(isMediaFile);
   const docs=arr.filter(f=>!isMediaFile(f));
-  $("fileImg").value=$("fileAny").value=$("fileCam").value="";
+  $("fileImg").value=$("fileVid").value=$("fileAny").value=$("fileCam").value="";
   if(media.length){
     if(!$("composer").classList.contains("hidden")){
       media.forEach(f=>comp.items.push({file:f,url:URL.createObjectURL(f),kind:f.type.startsWith("video/")?"video":"image",cap:""}));
