@@ -1,5 +1,5 @@
 // Service worker — coque de l'appli uniquement (jamais les données/API)
-const CACHE = 'discussion-v2';
+const CACHE = 'discussion-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

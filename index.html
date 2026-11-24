@@ -105,6 +105,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 #recBar .hint{font-size:13px; color:var(--muted)}
 .rnd.rec{background:#e53935; transform:scale(1.15)}
 
+/* emoji */
+.emoji-b{border:0; background:transparent; font-size:22px; cursor:pointer; padding:0 2px 0 0; align-self:center; line-height:1}
+#emojiPanel{position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line);
+  height:44vh; overflow-y:auto; z-index:40; padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  display:grid; grid-template-columns:repeat(8,1fr); gap:4px}
+#emojiPanel span{font-size:26px; text-align:center; padding:6px 0; cursor:pointer; border-radius:8px}
+#emojiPanel span:active{background:#eee}
+/* recherche */
+#searchBar{position:absolute; inset:0; background:var(--bar); display:flex; align-items:center; gap:8px;
+  padding:10px 12px; padding-top:calc(10px + env(safe-area-inset-top)); z-index:3}
+#searchBar input{flex:1; border:0; outline:none; border-radius:20px; padding:10px 14px; font-size:16px;
+  -webkit-user-select:text; user-select:text}
+#searchBar .si{color:#fff; font-size:22px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer}
+#searchBar .cnt{color:#fff; font-size:13px; min-width:48px; text-align:center}
+.hl{background:#ffe27a; color:#000; border-radius:3px}
+.row.dim{opacity:.25}
+/* fond d'écran */
+.wallpick{position:fixed; inset:0; background:#0007; z-index:62; display:flex; align-items:flex-end}
+.wallpick .wp{background:#fff; width:100%; border-radius:18px 18px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); animation:up .18s ease}
+.wallpick h3{margin:2px 0 12px; font-size:17px}
+.wallpick .sw{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px}
+.wallpick .s{height:72px; border-radius:12px; border:2px solid var(--line); cursor:pointer}
+.wallpick .s:active{transform:scale(.96)}
+.wallpick button{width:100%; padding:13px; border:0; border-radius:12px; font-size:15px; margin-top:8px; cursor:pointer}
+.wallpick .wimg{background:var(--bordeaux); color:#fff}
+.wallpick .wclose{background:#eee; color:#333}
+/* vue unique */
+.once-ph{display:flex; align-items:center; gap:8px; padding:12px 10px; min-width:170px; color:#555; font-style:italic}
+.once-ph .oi{width:34px;height:34px;border-radius:50%;background:var(--bordeaux);color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal}
+.ctog{display:flex;align-items:center;gap:6px;background:#2a2a2f;color:#fff;border:0;border-radius:18px;padding:8px 12px;font-size:13px;cursor:pointer}
+.ctog.on{background:var(--bordeaux)}
+
 /* ---------- INPUT ---------- */
 #bar{flex:0 0 auto; display:flex; align-items:flex-end; gap:6px; padding:7px 8px; position:relative;
   padding-bottom:calc(7px + env(safe-area-inset-bottom)); background:#f2ece6; border-top:1px solid var(--line)}
@@ -175,11 +207,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 #toast{position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#000a; color:#fff;
   padding:9px 16px; border-radius:20px; font-size:14px; z-index:80; opacity:0; transition:opacity .2s; pointer-events:none}
 #toast.show{opacity:1}
-.sysmenu{position:fixed; z-index:70; background:#fff; border-radius:14px; box-shadow:0 10px 40px rgba(0,0,0,.3);
-  overflow:hidden; min-width:180px}
-.sysmenu div{padding:14px 18px; font-size:15px; cursor:pointer}
-.sysmenu div:active{background:#f3eee9}
-.sysmenu div.danger{color:#c0392b}
+.sysmenu{position:fixed; z-index:70; background:#1e1e22; color:#fff; border-radius:14px; box-shadow:0 10px 40px rgba(0,0,0,.45);
+  overflow:hidden; min-width:200px}
+.sysmenu div{padding:14px 18px; font-size:15px; cursor:pointer; border-bottom:1px solid #ffffff12}
+.sysmenu div:last-child{border-bottom:0}
+.sysmenu div:active{background:#2e2e34}
+.sysmenu div.danger{color:#ff6b6b}
 </style>
 </head>
 <body>
@@ -207,7 +240,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <div class="nm" id="headName">…</div>
       <div class="st" id="headStatus">connexion…</div>
     </div>
+    <div class="ico" id="searchBtn">🔍</div>
     <div class="ico" id="menuBtn">⋮</div>
+    <div id="searchBar" class="hidden">
+      <div class="si" id="searchBack">←</div>
+      <input id="searchInput" placeholder="Rechercher un message…" autocomplete="off">
+      <div class="cnt" id="searchCnt"></div>
+      <div class="si" id="searchClear">✕</div>
+    </div>
   </header>
 
   <div id="replyBar" class="hidden">
@@ -219,7 +259,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 
   <footer id="bar" class="hidden">
     <button class="rnd ghost" id="attachBtn" title="Joindre">＋</button>
-    <div id="inwrap"><textarea id="msg" rows="1" placeholder="Message" enterkeyhint="send"></textarea></div>
+    <div id="inwrap"><button id="emojiBtn" class="emoji-b" title="Emoji">😊</button><textarea id="msg" rows="1" placeholder="Message" enterkeyhint="send"></textarea></div>
     <button class="rnd" id="sendBtn" title="Envoyer">🎤</button>
     <div id="recBar" class="hidden"><span class="dot"></span><span class="rt" id="recTime">0:00</span><span class="hint" id="recHint">Relâche pour envoyer · glisse ← pour annuler</span></div>
   </footer>
@@ -229,6 +269,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 <input type="file" id="fileAny" class="hidden" multiple>
 <input type="file" id="fileCam" accept="image/*" capture="environment" class="hidden">
 <div id="toast"></div>
+<div id="emojiPanel" class="hidden"></div>
 
 <!-- COMPOSER : aperçu des photos/vidéos sélectionnées avant l'envoi (comme WhatsApp) -->
 <div id="composer" class="hidden">
@@ -238,6 +279,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
     <div class="ci" style="opacity:0;pointer-events:none">✕</div>
   </div>
   <div id="cStage"></div>
+  <div style="display:flex;justify-content:center;padding:6px 10px 0"><button id="cOnce" class="ctog">👁 Vue unique</button></div>
   <div id="cCapWrap">
     <textarea id="cCap" rows="1" placeholder="Ajouter une légende…" enterkeyhint="send"></textarea>
     <button id="cSend">➤</button>
@@ -258,6 +300,7 @@ let msgs=new Map();      // id -> message
 let maxRev=0;
 let otherLast=0;         // other person's last-read timestamp
 let otherSeenAt=0;       // when other last pinged (for presence)
+let otherOnline=false, otherTyping=false;
 let profiles={};         // author -> {name,avatar}
 let replyTo=null;
 let pollTimer=null, seenTimer=null;
@@ -350,25 +393,32 @@ async function sync(initial){
 function startPolling(){
   clearInterval(pollTimer); clearInterval(seenTimer);
   pollTimer=setInterval(()=>{ if(!document.hidden) sync(false); },3000);
-  seenTimer=setInterval(()=>{ if(!document.hidden) pushSeen(); },5000);
-  document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ sync(false); pushSeen(); } });
+  seenTimer=setInterval(()=>{ if(!document.hidden) pushSeen(); },2500);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ sync(false); pushSeen(); } else { pushSeen(false); } });
 }
-async function pushSeen(){
+let myTyping=false, lastTypingSent=0;
+function setTyping(on){
+  myTyping=on;
+  const now=Date.now();
+  if(on && now-lastTypingSent<1800) return;   // throttle
+  lastTypingSent=now; pushSeen(on);
+}
+async function pushSeen(typing){
   let last=0;
   msgs.forEach(m=>{ if(m.author!==ME && m.t>last) last=m.t; });
   try{
-    const r=await rpc("app_seen",{p_code:CODE,p_last:last});
+    const r=await rpc("app_ping",{p_code:CODE,p_last:last,p_typing:typing===undefined?myTyping:!!typing});
     if(r){
       const prev=otherLast;
       otherLast=r.other_last||0;
-      if(otherLast!==prev){ otherSeenAt=Date.now(); updateTicks(); }
+      otherOnline=!!r.other_online; otherTyping=!!r.other_typing;
+      if(otherLast!==prev) updateTicks();
       refreshStatus();
     }
   }catch(e){}
 }
 function refreshStatus(){
-  const online=(Date.now()-otherSeenAt)<14000;
-  $("headStatus").textContent = online? "en ligne" : "en discussion";
+  $("headStatus").textContent = otherTyping ? "en train d'écrire…" : (otherOnline ? "en ligne" : "en ligne récemment");
 }
 
 /* ---------- RENDER ---------- */
@@ -412,7 +462,17 @@ function bubble(m){
       '<div class="meta"><span class="time">'+hhmm(m.t)+'</span></div></div></div>';
   }
   if(m.reply){ inner+='<div class="reply-q"><b>'+esc(nameOf(m.reply.author))+'</b>'+esc(m.reply.text||mediaWord(m.reply))+'</div>'; }
-  if(m.kind==="image"){
+  if(m.once && (m.kind==="image"||m.kind==="video")){
+    const opened=m.opened_by&&m.opened_by[ME];
+    const openedOther=m.opened_by&&m.opened_by[otherId()];
+    if(mine){
+      inner+='<div class="once-ph"><span class="oi">👁</span>Vue unique '+(openedOther?'· Ouvert':'· En attente')+'</div>';
+    }else if(opened){
+      inner+='<div class="once-ph"><span class="oi">👁</span>Ouvert</div>';
+    }else{
+      inner+='<div class="once-ph" data-once="'+m.id+'"><span class="oi">👁</span>Appuyer pour voir · vue unique</div>';
+    }
+  }else if(m.kind==="image"){
     inner+='<div class="media" data-media="'+m.id+'">'+(m.thumb?'<img src="'+m.thumb+'">':'<div class="ph">📷 photo…</div>')+'</div>';
   }else if(m.kind==="video"){
     inner+='<div class="media" data-media="'+m.id+'">'+(m.thumb?'<img src="'+m.thumb+'">':'<div class="ph">🎬 vidéo…</div>')+
@@ -420,11 +480,18 @@ function bubble(m){
   }else if(m.kind==="audio"){
     inner+='<div class="voice" data-voice="'+m.id+'"><button class="vplay">▶</button>'+
       '<div class="vwave"><i></i></div><span class="vdur">'+(m.dur?fmtDur(m.dur):'🎤')+'</span></div>';
+  }else if(m.kind==="location"){
+    const c=(m.name||"").split(","); const lat=c[0],lng=c[1];
+    inner+='<div class="filecard loc" data-geo="'+esc(m.name||"")+'"><div class="fi" style="background:#2e7d32">📍</div>'+
+      '<div style="min-width:0"><div class="fn">Position partagée</div><div class="fs">Ouvrir dans Maps</div></div></div>';
+  }else if(m.kind==="contact"){
+    inner+='<div class="filecard ct" data-tel="'+esc(m.text||"")+'"><div class="fi" style="background:#1565c0">👤</div>'+
+      '<div style="min-width:0"><div class="fn">'+esc(m.name||"Contact")+'</div><div class="fs">'+esc(m.text||"")+'</div></div></div>';
   }else if(m.kind==="file"){
     inner+='<div class="filecard" data-media="'+m.id+'"><div class="fi">📄</div><div style="min-width:0"><div class="fn">'+
       esc(m.name||"fichier")+'</div><div class="fs">'+fsize(m.size)+'</div></div></div>';
   }
-  if(m.text){ inner+='<div class="txt">'+linkify(esc(m.text))+'</div>'; }
+  if(m.text && m.kind!=="contact" && m.kind!=="location"){ inner+='<div class="txt">'+linkify(esc(m.text))+'</div>'; }
   let ticks="";
   if(mine){ ticks='<span class="tick'+(otherLast>=m.t?' read':'')+'">'+(otherLast>=m.t?'✓✓':'✓')+'</span>'; }
   let react="";
@@ -496,9 +563,11 @@ async function showLightbox(m){
     lb.querySelector(".close").onclick=()=>history.back(); }
 }
 window.addEventListener("popstate",()=>{
+  if(wallEl){ closeWall(); return; }
   if(!$("composer").classList.contains("hidden")){ closeComposer(); return; }
   if(lbOpen){ const lb=$("lb"); if(lb&&lb._close) lb._close(); return; }
-  if(sheetOpen){ closeSheet(); }
+  if(sheetOpen){ closeSheet(); return; }
+  if(searchOn){ closeSearch(); return; }
 });
 function saveBlobUrl(url,name){ const a=document.createElement("a"); a.href=url; a.download=name; a.click(); }
 async function downloadFile(m){
@@ -510,7 +579,7 @@ async function downloadFile(m){
 /* ---------- SEND TEXT ---------- */
 const msgEl=$("msg");
 function refreshSendBtn(){ $("sendBtn").textContent = msgEl.value.trim() ? "➤" : "🎤"; }
-msgEl.addEventListener("input",()=>{ msgEl.style.height="auto"; msgEl.style.height=Math.min(msgEl.scrollHeight,120)+"px"; refreshSendBtn(); });
+msgEl.addEventListener("input",()=>{ msgEl.style.height="auto"; msgEl.style.height=Math.min(msgEl.scrollHeight,120)+"px"; refreshSendBtn(); setTyping(!!msgEl.value.trim()); });
 msgEl.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendText(); }
 });
@@ -518,7 +587,7 @@ async function sendTextOrClick(){ if(msgEl.value.trim()) await sendText(); }
 $("sendBtn").onclick=()=>{ if(msgEl.value.trim()) sendText(); };
 async function sendText(){
   const t=msgEl.value.trim(); if(!t) return;
-  msgEl.value=""; msgEl.style.height="auto"; refreshSendBtn();
+  msgEl.value=""; msgEl.style.height="auto"; refreshSendBtn(); setTyping(false);
   const payload={kind:"text",text:t};
   if(replyTo){ payload.reply={author:replyTo.author,text:replyTo.text||mediaWord(replyTo),kind:replyTo.kind}; clearReply(); }
   try{
@@ -530,8 +599,10 @@ async function sendText(){
 /* ---------- SEND MEDIA ---------- */
 $("attachBtn").onclick=()=>{
   openSysMenu($("attachBtn"),[
-    {t:"📷 Photo / Vidéo",f:()=>$("fileImg").click()},
+    {t:"🖼️ Galerie (photos & vidéos)",f:()=>$("fileImg").click()},
     {t:"📸 Appareil photo",f:()=>$("fileCam").click()},
+    {t:"📍 Position",f:shareLocation},
+    {t:"👤 Contact",f:shareContact},
     {t:"📎 Document",f:()=>$("fileAny").click()},
   ]);
 };
@@ -556,13 +627,14 @@ async function handleFiles(files){
     if(r) clearReply();
   }
 }
-async function sendFile(file,caption,replyMsg){
+async function sendFile(file,caption,replyMsg,once){
   const isImg=file.type.startsWith("image/");
   const isVid=file.type.startsWith("video/");
   const isAud=file.type.startsWith("audio/");
   const kind=isImg?"image":isVid?"video":isAud?"audio":"file";
   const tempId="tmp_"+Math.random().toString(36).slice(2);
   const tmp={id:tempId,author:ME,kind,text:caption||null,mime:file.type,name:file.name,size:file.size,dur:file._dur||null,
+    once:!!once,opened_by:null,
     thumb:null,t:Date.now(),rev:0,reactions:{},reply:replyMsg?{author:replyMsg.author,text:replyMsg.text||mediaWord(replyMsg),kind:replyMsg.kind}:null};
   msgs.set(tempId,tmp); render(); showProgress(tempId,2);
   try{
@@ -583,6 +655,7 @@ async function sendFile(file,caption,replyMsg){
     }
     const payload={kind,mime:file.type,name:file.name,size:file.size,vparts:paths,thumb};
     if(caption) payload.text=caption;
+    if(once) payload.once=true;
     if(isVid){ const d=await videoDuration(file).catch(()=>0); if(d)payload.dur=Math.round(d); }
     if(isAud&&file._dur){ payload.dur=Math.round(file._dur); }
     if(replyMsg){ payload.reply={author:replyMsg.author,text:replyMsg.text||mediaWord(replyMsg),kind:replyMsg.kind}; }
@@ -595,16 +668,47 @@ async function sendFile(file,caption,replyMsg){
   }
 }
 
+/* ---------- POSITION & CONTACT ---------- */
+async function sendSpecial(payload){
+  try{ const m=await rpc("app_send",{p_code:CODE,p_payload:payload}); if(m){ msgs.set(m.id,m); if(m.rev>maxRev)maxRev=m.rev; render(); } }
+  catch(e){ toast("Échec de l'envoi"); }
+}
+function shareLocation(){
+  if(!navigator.geolocation){ toast("Position non disponible"); return; }
+  toast("Localisation…");
+  navigator.geolocation.getCurrentPosition(
+    pos=>{ const lat=pos.coords.latitude.toFixed(6), lng=pos.coords.longitude.toFixed(6);
+      sendSpecial({kind:"location",name:lat+","+lng}); },
+    err=>{ toast("Position refusée"); }, {enableHighAccuracy:true,timeout:10000});
+}
+async function shareContact(){
+  // Android Chrome : sélecteur de contacts natif
+  if(navigator.contacts && navigator.contacts.select){
+    try{
+      const c=await navigator.contacts.select(['name','tel'],{multiple:false});
+      if(c&&c.length){ const name=(c[0].name&&c[0].name[0])||"Contact"; const tel=(c[0].tel&&c[0].tel[0])||"";
+        sendSpecial({kind:"contact",name,text:tel}); return; }
+      return;
+    }catch(e){ /* repli saisie manuelle */ }
+  }
+  const name=prompt("Nom du contact :"); if(name==null||!name.trim()) return;
+  const tel=prompt("Numéro de téléphone :"); if(tel==null||!tel.trim()) return;
+  sendSpecial({kind:"contact",name:name.trim(),text:tel.trim()});
+}
+
 /* ---------- COMPOSER (aperçu photos/vidéos avant envoi) ---------- */
 let comp={items:[],active:0};
 function openComposer(files){
   comp.items=files.map(f=>({file:f,url:URL.createObjectURL(f),kind:f.type.startsWith("video/")?"video":"image",cap:""}));
-  comp.active=0;
+  comp.active=0; comp.once=false;
+  $("cOnce").classList.remove("on"); $("cOnce").textContent="👁 Vue unique";
   $("composer").classList.remove("hidden");
   history.pushState({composer:1},"");
   renderComposer();
   setTimeout(()=>$("cCap").focus(),120);
 }
+$("cOnce").onclick=()=>{ comp.once=!comp.once; $("cOnce").classList.toggle("on",comp.once);
+  $("cOnce").textContent=comp.once?"👁 Vue unique ✓":"👁 Vue unique"; };
 function closeComposer(){
   comp.items.forEach(it=>{ try{URL.revokeObjectURL(it.url);}catch(e){} });
   comp.items=[]; comp.active=0;
@@ -656,9 +760,10 @@ async function sendComposer(){
   if(!comp.items.length) return;
   if(comp.items[comp.active]) comp.items[comp.active].cap=$("cCap").value;
   const items=comp.items.map(it=>({file:it.file,cap:it.cap}));
+  const onceFlag=comp.once;
   const r=replyTo;
   history.back();                 // ferme l'aperçu (via popstate -> closeComposer)
-  for(let i=0;i<items.length;i++){ await sendFile(items[i].file, items[i].cap, i===0?r:null); }
+  for(let i=0;i<items.length;i++){ await sendFile(items[i].file, items[i].cap, i===0?r:null, onceFlag); }
   if(r) clearReply();
 }
 function showProgress(id,pct){
@@ -768,6 +873,12 @@ function bindBubbles(){
     if(media){ media.onclick=(e)=>{ e.stopPropagation(); if(m.vparts) openMedia(m); }; }
     const voice=row.querySelector('[data-voice]');
     if(voice){ voice.querySelector('.vplay').onclick=(e)=>{ e.stopPropagation(); playVoice(m,voice); }; }
+    const geo=row.querySelector('[data-geo]');
+    if(geo){ geo.onclick=(e)=>{ e.stopPropagation(); const g=geo.dataset.geo; if(g) window.open("https://maps.google.com/?q="+encodeURIComponent(g),"_blank"); }; }
+    const tel=row.querySelector('[data-tel]');
+    if(tel){ tel.onclick=(e)=>{ e.stopPropagation(); const t=tel.dataset.tel; if(t) window.open("tel:"+t.replace(/\s/g,"")); }; }
+    const once=row.querySelector('[data-once]');
+    if(once){ once.onclick=(e)=>{ e.stopPropagation(); revealOnce(m); }; }
     let lpTimer=null, moved=false, sx=0,sy=0;
     const start=(x,y)=>{ moved=false; sx=x; sy=y; lpTimer=setTimeout(()=>{ if(!moved) openSheet(m); },420); };
     const move=(x,y)=>{ if(Math.abs(x-sx)>12||Math.abs(y-sy)>12) moved=true; if(moved&&lpTimer){clearTimeout(lpTimer);lpTimer=null;} };
@@ -862,6 +973,7 @@ function closeMenu(){ if(menuEl){ menuEl.remove(); menuEl=null; } }
 $("menuBtn").onclick=()=>{
   openSysMenu($("menuBtn"),[
     {t:"🖼️ Changer ma photo",f:changeAvatar},
+    {t:"🎨 Fond d'écran",f:openWallpaper},
     {t:"🔑 Changer mon code",f:changeCode},
     {t:"🔄 Rafraîchir",f:()=>sync(true)},
     {t:"🚪 Se déconnecter",danger:true,f:logout},
@@ -892,12 +1004,108 @@ function logout(){
   location.reload();
 }
 
+/* ---------- VUE UNIQUE : révéler ---------- */
+async function revealOnce(m){
+  try{
+    const r=await rpc("app_opened",{p_code:CODE,p_id:m.id});
+    if(r){ msgs.set(r.id,r); if(r.rev>maxRev)maxRev=r.rev; render(); }
+  }catch(e){}
+  try{ await showLightbox(m); }catch(e){ toast("Erreur"); }
+}
+
+/* ---------- CLAVIER EMOJI ---------- */
+const EMO="😀😁😂🤣😊😍😘😗😙😚🙂🤗🤩🤔😐😶🙄😏😣😥😮🤐😯😪😫😴😌😛😜😝🤤😒😓😔😕🙃🤑😲🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵😡😠🤬😷🤒🤕🤢🤮🥳🥺👍👎👏🙌🙏👌✌️🤞❤️🧡💛💚💙💜🖤🤍💔❣️💕💞💓💗💖💘💝🔥✨🎉🌹💐🌸🌺🎁😎".match(/\p{Extended_Pictographic}(‍\p{Extended_Pictographic})*(️)?/gu)||[];
+let emojiOpen=false;
+function buildEmoji(){ if($("emojiPanel").childElementCount) return;
+  $("emojiPanel").innerHTML=EMO.map(e=>'<span>'+e+'</span>').join("");
+  $("emojiPanel").querySelectorAll('span').forEach(s=>s.onclick=()=>insertEmoji(s.textContent));
+}
+function insertEmoji(e){
+  const el=msgEl, s=el.selectionStart||el.value.length, en=el.selectionEnd||el.value.length;
+  el.value=el.value.slice(0,s)+e+el.value.slice(en); el.selectionStart=el.selectionEnd=s+e.length;
+  el.dispatchEvent(new Event("input")); el.focus();
+}
+$("emojiBtn").onclick=()=>{
+  buildEmoji(); emojiOpen=!emojiOpen;
+  $("emojiPanel").classList.toggle("hidden",!emojiOpen);
+  $("emojiBtn").textContent=emojiOpen?"⌨️":"😊";
+};
+msgEl.addEventListener("focus",()=>{ if(emojiOpen){ emojiOpen=false; $("emojiPanel").classList.add("hidden"); $("emojiBtn").textContent="😊"; } });
+
+/* ---------- RECHERCHE ---------- */
+let searchOn=false;
+$("searchBtn").onclick=()=>{ searchOn=true; $("searchBar").classList.remove("hidden"); history.pushState({search:1},""); setTimeout(()=>$("searchInput").focus(),50); };
+$("searchBack").onclick=()=>history.back();
+$("searchClear").onclick=()=>{ $("searchInput").value=""; applySearch(); $("searchInput").focus(); };
+function closeSearch(){ searchOn=false; $("searchBar").classList.add("hidden"); $("searchInput").value=""; applySearch(); }
+$("searchInput").addEventListener("input",applySearch);
+function applySearch(){
+  const q=($("searchInput").value||"").trim().toLowerCase();
+  const rows=[...document.querySelectorAll('#scroll .row')];
+  if(!q){ rows.forEach(r=>{ r.classList.remove('dim'); r.querySelectorAll('.hl').forEach(h=>h.replaceWith(document.createTextNode(h.textContent))); }); $("searchCnt").textContent=""; return; }
+  let n=0, firstMatch=null;
+  rows.forEach(r=>{
+    const m=msgs.get(r.dataset.id); const txt=(m&&m.text)?m.text.toLowerCase():"";
+    const hit = txt.includes(q);
+    r.classList.toggle('dim',!hit);
+    if(hit){ n++; if(!firstMatch) firstMatch=r;
+      const te=r.querySelector('.txt');
+      if(te){ te.innerHTML=linkify(esc(m.text)).replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<span class="hl">$1</span>'); }
+    }
+  });
+  $("searchCnt").textContent=n?n+" trouvé"+(n>1?"s":""):"aucun";
+  if(firstMatch) firstMatch.scrollIntoView({block:"center",behavior:"smooth"});
+}
+
+/* ---------- FOND D'ÉCRAN ---------- */
+const WALLS=[
+ {n:"Défaut", v:""},
+ {n:"Bordeaux", v:"linear-gradient(160deg,#f3e6ea,#ece0d8)"},
+ {n:"Sombre", v:"#0b141a"},
+ {n:"Vert d'eau", v:"#dbefe6"},
+ {n:"Rose", v:"#f7e3ec"},
+ {n:"Sable", v:"#efe7dc"},
+];
+function applyWall(){
+  let w=""; try{ w=localStorage.getItem('disc_wall')||""; }catch(e){}
+  const s=$("scroll");
+  if(!w){ s.style.backgroundImage=""; s.style.background=""; s.style.backgroundColor=""; return; }
+  if(w.indexOf("data:")===0){ s.style.background="#0b141a"; s.style.backgroundImage="url("+w+")"; s.style.backgroundSize="cover"; s.style.backgroundPosition="center"; }
+  else { s.style.backgroundImage="none"; s.style.background=w; }
+}
+let wallEl=null;
+function openWallpaper(){
+  const bg=document.createElement("div"); bg.className="wallpick"; wallEl=bg;
+  bg.innerHTML='<div class="wp"><h3>Fond d\'écran</h3><div class="sw">'+
+    WALLS.map((w,i)=>'<div class="s" data-i="'+i+'" style="background:'+(w.v||"var(--bg)")+'"></div>').join("")+
+    '</div><button class="wimg">🖼️ Choisir une image</button><button class="wclose">Fermer</button></div>';
+  document.body.appendChild(bg);
+  history.pushState({wall:1},"");
+  bg.onclick=e=>{ if(e.target===bg) history.back(); };
+  bg.querySelectorAll('.s').forEach(s=>s.onclick=()=>{ try{localStorage.setItem('disc_wall',WALLS[+s.dataset.i].v);}catch(e){} applyWall(); history.back(); });
+  bg.querySelector('.wclose').onclick=()=>history.back();
+  bg.querySelector('.wimg').onclick=()=>{
+    const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+    inp.onchange=async e=>{ const f=e.target.files[0]; if(!f){history.back();return;} const d=await wallDataUrl(f);
+      if(d){ try{ localStorage.setItem('disc_wall',d); applyWall(); }catch(err){ toast("Image trop lourde"); } } history.back(); };
+    inp.click();
+  };
+}
+function closeWall(){ if(wallEl){ wallEl.remove(); wallEl=null; } }
+function wallDataUrl(file){ return new Promise(res=>{ const img=new Image(); const u=URL.createObjectURL(file);
+  img.onload=()=>{ URL.revokeObjectURL(u); const max=1200; let w=img.width,h=img.height;
+    if(w>h&&w>max){h=Math.round(h*max/w);w=max;} else if(h>max){w=Math.round(w*max/h);h=max;}
+    const c=document.createElement("canvas"); c.width=w;c.height=h; c.getContext("2d").drawImage(img,0,0,w,h);
+    try{res(c.toDataURL("image/jpeg",0.72));}catch(e){res(null);} };
+  img.onerror=()=>res(null); img.src=u; }); }
+
 /* ---------- TOAST ---------- */
 let toastT=null;
 function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toastT);
   toastT=setTimeout(()=>el.classList.remove("show"),1800); }
 
 /* ---------- BOOT ---------- */
+applyWall();
 if(CODE&&ME){ startChat(); }
 else { $("code").focus(); }
 
