@@ -325,7 +325,7 @@ let msgs=new Map();      // id -> message
 let maxRev=0;
 let otherLast=0;         // other person's last-read timestamp
 let otherSeenAt=0;       // when other last pinged (for presence)
-let otherOnline=false, otherTyping=false;
+let otherOnline=false, otherTyping=false, otherSeenMs=0;
 let profiles={};         // author -> {name,avatar}
 let replyTo=null;
 let pollTimer=null, seenTimer=null;
@@ -437,13 +437,28 @@ async function pushSeen(typing){
       const prev=otherLast;
       otherLast=r.other_last||0;
       otherOnline=!!r.other_online; otherTyping=!!r.other_typing;
+      if(r.other_seen) otherSeenMs=r.other_seen;
       if(otherLast!==prev) updateTicks();
       refreshStatus();
     }
   }catch(e){}
 }
+function lastSeenText(ms){
+  if(!ms) return "";
+  const d=new Date(ms), now=new Date();
+  const hm=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const y=new Date(now); y.setDate(now.getDate()-1);
+  if(d.toDateString()===now.toDateString()) return "aujourd'hui à "+hm;
+  if(d.toDateString()===y.toDateString()) return "hier à "+hm;
+  return "le "+d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})+" à "+hm;
+}
 function refreshStatus(){
-  $("headStatus").textContent = otherTyping ? "en train d'écrire…" : (otherOnline ? "en ligne" : "en ligne récemment");
+  let t;
+  if(otherTyping) t="en train d'écrire…";
+  else if(otherOnline) t="en ligne";
+  else if(otherSeenMs) t="vu "+lastSeenText(otherSeenMs);
+  else t="hors ligne";
+  $("headStatus").textContent=t;
 }
 
 /* ---------- RENDER ---------- */
